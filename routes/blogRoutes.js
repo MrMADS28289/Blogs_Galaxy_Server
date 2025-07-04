@@ -1,16 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const Blog = require("../models/Blog");
+const blogController = require("../controllers/blogController");
 const auth = require("../middleware/authMiddleware");
 
-router.post("/", auth, async (req, res) => {
-const newBlog = await Blog.create({ ...req.body, author: req.user.id });
-res.status(201).json(newBlog);
-});
+// 📚 Create a blog (Authenticated)
+router.post("/", auth, blogController.createBlog);
 
-router.get("/", async (req, res) => {
-const blogs = await Blog.find().populate("author");
-res.json(blogs);
-});
+// 🌍 Get all blogs (Public)
+router.get("/", blogController.getAllBlogs);
+
+// 🔍 Get a single blog by ID (Public)
+router.get("/:id", blogController.getBlogById);
+
+// ✏️ Update blog (Authenticated & Owner)
+router.put("/:id", auth, blogController.updateBlog);
+
+// 🗑️ Delete blog (Authenticated & Owner)
+router.delete("/:id", auth, blogController.deleteBlog);
+
+// ⭐ Rate a blog (Authenticated)
+router.post("/:id/rate", auth, blogController.rateBlog);
 
 module.exports = router;

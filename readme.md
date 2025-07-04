@@ -1,171 +1,83 @@
-🔌 MongoDB Connection (config/db.js)
+# Blogs Galaxy Backend
 
-const mongoose = require("mongoose");
+This is the backend for the Blogs Galaxy application, built with Node.js, Express, and MongoDB. It provides RESTful APIs for user authentication, blog management, and blog rating.
 
-const connectDB = async () => {
-try {
-await mongoose.connect(process.env.MONGO_URI);
-console.log("MongoDB connected");
-} catch (error) {
-console.error("MongoDB connection failed", error);
-process.exit(1);
-}
-};
+## Technologies Used
 
-module.exports = connectDB;
+- Node.js
+- Express.js
+- MongoDB (via Mongoose)
+- bcryptjs (for password hashing)
+- jsonwebtoken (for authentication)
+- dotenv (for environment variables)
+- cors (for Cross-Origin Resource Sharing)
 
-🧠 Mongoose Models
+## Setup Instructions
 
-models/User.js
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd blogs-galaxy-backend
+    ```
 
-const mongoose = require("mongoose");
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-const userSchema = new mongoose.Schema({
-name: String,
-email: { type: String, unique: true },
-password: String,
-avatar: String,
-role: { type: String, default: "user" },
-badges: [{ type: mongoose.Schema.Types.ObjectId, ref: "Badge" }]
-}, { timestamps: true });
+3.  **Create a `.env` file:**
+    Create a file named `.env` in the root directory of the project and add the following environment variables:
+    ```
+    MONGO_URI=your_mongodb_connection_string
+    JWT_SECRET=your_jwt_secret_key
+    ```
+    Replace `your_mongodb_connection_string` with your MongoDB connection URI (e.g., `mongodb://localhost:27017/blogs-galaxy` or a MongoDB Atlas URI) and `your_jwt_secret_key` with a strong, random string.
 
-module.exports = mongoose.model("User", userSchema);
+4.  **Run the server:**
+    ```bash
+    npm start
+    ```
+    The server will run on `http://localhost:5000`.
 
-models/Blog.js
+## API Endpoints
 
-const mongoose = require("mongoose");
+### Authentication
 
-const blogSchema = new mongoose.Schema({
-title: String,
-content: String,
-coverImage: String,
-category: String,
-tags: [String],
-author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-ratings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Rating" }],
-views: { type: Number, default: 0 },
-trending: { type: Boolean, default: false },
-}, { timestamps: true });
+-   **`POST /api/auth/register`**
+    -   Registers a new user.
+    -   **Request Body:** `{ "name": "string", "email": "string", "password": "string" }`
+    -   **Response:** `{ "token": "string" }`
 
-module.exports = mongoose.model("Blog", blogSchema);
+-   **`POST /api/auth/login`**
+    -   Logs in an existing user.
+    -   **Request Body:** `{ "email": "string", "password": "string" }`
+    -   **Response:** `{ "token": "string" }`
 
-models/Badge.js
+### Blogs
 
-const mongoose = require("mongoose");
+-   **`POST /api/blogs`** (Authenticated)
+    -   Creates a new blog post.
+    -   **Request Body:** `{ "title": "string", "content": "string" }`
+    -   **Response:** `{ "_id": "string", "title": "string", "content": "string", "author": "string", ... }`
 
-const badgeSchema = new mongoose.Schema({
-name: String,
-icon: String,
-condition: String, // e.g. "5 blogs", "1000 views"
-});
+-   **`GET /api/blogs`** (Public)
+    -   Retrieves all blog posts.
+    -   **Response:** `[ { ...blog_object }, ... ]`
 
-module.exports = mongoose.model("Badge", badgeSchema);
+-   **`GET /api/blogs/:id`** (Public)
+    -   Retrieves a single blog post by ID.
+    -   **Response:** `{ ...blog_object }`
 
-models/Rating.js
+-   **`PUT /api/blogs/:id`** (Authenticated & Owner)
+    -   Updates an existing blog post by ID.
+    -   **Request Body:** `{ "title": "string", "content": "string" }` (partial updates allowed)
+    -   **Response:** `{ ...updated_blog_object }`
 
-const mongoose = require("mongoose");
+-   **`DELETE /api/blogs/:id`** (Authenticated & Owner)
+    -   Deletes a blog post by ID.
+    -   **Response:** `{ "message": "Blog deleted" }`
 
-const ratingSchema = new mongoose.Schema({
-user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-blog: { type: mongoose.Schema.Types.ObjectId, ref: "Blog" },
-stars: { type: Number, min: 1, max: 5 },
-});
-
-module.exports = mongoose.model("Rating", ratingSchema);
-
-🧪 Auth Example (controllers/authController.js)
-
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
-exports.register = async (req, res) => {
-const { name, email, password } = req.body;
-const hash = await bcrypt.hash(password, 10);
-
-try {
-const user = await User.create({ name, email, password: hash });
-res.status(201).json(user);
-} catch (err) {
-res.status(400).json({ error: err.message });
-}
-};
-
-exports.login = async (req, res) => {
-const { email, password } = req.body;
-const user = await User.findOne({ email });
-if (!user || !(await bcrypt.compare(password, user.password)))
-return res.status(401).json({ error: "Invalid credentials" });
-
-const token = jwt.sign({ id: user.\_id }, process.env.JWT_SECRET);
-res.json({ token, user });
-};
-
-🔐 Middleware (middleware/authMiddleware.js)
-
-const jwt = require("jsonwebtoken");
-
-const auth = (req, res, next) => {
-const token = req.headers.authorization?.split(" ")[1];
-if (!token) return res.status(403).json({ error: "Access denied" });
-
-try {
-const decoded = jwt.verify(token, process.env.JWT_SECRET);
-req.user = decoded;
-next();
-} catch (err) {
-res.status(401).json({ error: "Invalid token" });
-}
-};
-
-module.exports = auth;
-
-🛣️ Routes (routes/authRoutes.js)
-
-const express = require("express");
-const router = express.Router();
-const { register, login } = require("../controllers/authController");
-
-router.post("/register", register);
-router.post("/login", login);
-
-module.exports = router;
-
-🧪 Blog Route (routes/blogRoutes.js)
-
-const express = require("express");
-const router = express.Router();
-const Blog = require("../models/Blog");
-const auth = require("../middleware/authMiddleware");
-
-router.post("/", auth, async (req, res) => {
-const newBlog = await Blog.create({ ...req.body, author: req.user.id });
-res.status(201).json(newBlog);
-});
-
-router.get("/", async (req, res) => {
-const blogs = await Blog.find().populate("author");
-res.json(blogs);
-});
-
-module.exports = router;
-
-🖥️ server.js
-
-const express = require("express");
-const connectDB = require("./config/db");
-const cors = require("cors");
-require("dotenv").config();
-
-const app = express();
-connectDB();
-
-app.use(cors());
-app.use(express.json());
-
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/blogs", require("./routes/blogRoutes"));
-
-app.listen(5000, () => {
-console.log("Server running on http://localhost:5000");
-});
+-   **`POST /api/blogs/:id/rate`** (Authenticated)
+    -   Rates a blog post.
+    -   **Request Body:** `{ "stars": "number" }` (1-5)
+    -   **Response:** `{ ...updated_blog_object_with_ratings }`
