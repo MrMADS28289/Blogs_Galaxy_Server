@@ -17,9 +17,16 @@ exports.createBlog = async (req, res) => {
 // Get all blogs
 exports.getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find()
+    const { category } = req.query; // Extract category from query parameters
+    let query = {};
+
+    if (category) {
+      query.category = category; // Add category to query if provided
+    }
+
+    const blogs = await Blog.find(query)
       .populate("author", "name avatar")
-      .populate("ratings");
+      .populate("ratings"); // Keep ratings for now, as per previous instruction
     res.status(200).json(blogs);
   } catch (error) {
     res.status(500).json({ error: error.message });
