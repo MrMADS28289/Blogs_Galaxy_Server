@@ -4,9 +4,11 @@ This is the backend for the Blogs Galaxy application, built with Node.js, Expres
 
 ## Features
 
-- User Authentication (Registration, Login)
+- User Authentication (Registration, Login, Google Sign-in)
 - JWT-based Authorization
 - CRUD operations for Blog Posts
+- Commenting on Blog Posts
+- Rating Blog Posts
 
 ## Technologies Used
 
@@ -64,13 +66,22 @@ The server will run on `http://localhost:5000`.
 
 ### Authentication
 
-- `POST /api/auth/register`: Register a new user.
-- `POST /api/auth/login`: Log in a user and get a JWT.
+- `POST /api/auth/register`: Register a new user. (Public)
+- `POST /api/auth/login`: Log in a user and get a JWT. (Public)
+- `POST /api/auth/google`: Authenticate user with Google. (Public)
 
 ### Blog Posts
 
-- `GET /api/blogs`: Get all blog posts.
-- `GET /api/blogs/:id`: Get a single blog post by ID.
-- `POST /api/blogs`: Create a new blog post (requires authentication).
-- `PUT /api/blogs/:id`: Update a blog post by ID (requires authentication).
-- `DELETE /api/blogs/:id`: Delete a blog post by ID (requires authentication).
+- `POST /api/blogs`: Create a new blog post. (Authenticated)
+- `GET /api/blogs`: Get all blog posts. (Public)
+- `GET /api/blogs/:id`: Get a single blog post by ID. (Public)
+- `PUT /api/blogs/:id`: Update a blog post by ID. (Authenticated & Owner)
+- `DELETE /api/blogs/:id`: Delete a blog post by ID. (Authenticated & Owner)
+- `POST /api/blogs/:id/rate`: Rate a blog post. (Authenticated)
+
+### Comments
+
+- `POST /api/comments`: Create a new comment. (Authenticated)
+- `GET /api/comments/blog/:blogId`: Get all comments for a specific blog. (Public)
+- `PUT /api/comments/:id`: Update a comment by ID. (Authenticated & Owner)
+- `DELETE /api/comments/:id`: Delete a comment by ID. (Authenticated & Owner)
