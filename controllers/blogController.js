@@ -1,115 +1,111 @@
 const Blog = require("../models/Blog");
 const Rating = require("../models/Rating");
+const asyncHandler = require("express-async-handler");
+const CustomError = require("../utils/CustomError");
 
 // Create a new blog
-exports.createBlog = async (req, res) => {
-  try {
-    const blog = await Blog.create({
-      ...req.body,
-      author: req.user.id,
-    });
+exports.createBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.create({
+    ...req.body,
+    author: req.user.id,
+  });
+  if (blog) {
     res.status(201).json(blog);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  } else {
+    res.status(400);
+    throw new CustomError("Invalid blog data", 400);
   }
-};
+});
 
 // Get all blogs
-exports.getAllBlogs = async (req, res) => {
-  try {
-    const { category } = req.query; // Extract category from query parameters
-    let query = {};
+exports.getAllBlogs = asyncHandler(async (req, res) => {
+  const { category } = req.query; // Extract category from query parameters
+  let query = {};
 
-    if (category) {
-      query.category = category; // Add category to query if provided
-    }
-
-    const blogs = await Blog.find(query)
-      .populate("author", "name avatar")
-      .populate("ratings"); // Keep ratings for now, as per previous instruction
-    res.status(200).json(blogs);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (category) {
+    query.category = category; // Add category to query if provided
   }
-};
+
+  const blogs = await Blog.find(query)
+    .populate("author", "name avatar")
+    .populate("ratings"); // Keep ratings for now, as per previous instruction
+  res.status(200).json(blogs);
+});
 
 // Get single blog
-exports.getBlogById = async (req, res) => {
-  try {
-    const blog = await Blog.findById(req.params.id)
-      .populate("author", "name avatar")
-      .populate("ratings");
+exports.getBlogById = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id)
+    .populate("author", "name avatar")
+    .populate("ratings");
 
-    if (!blog) return res.status(404).json({ error: "Blog not found" });
-
-    blog.views += 1;
-    await blog.save();
-
-    res.json(blog);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (!blog) {
+    res.status(404);
+    throw new CustomError("Blog not found", 404);
   }
-};
+
+  blog.views += 1;
+  await blog.save();
+
+  res.json(blog);
+});
 
 // Update a blog
-exports.updateBlog = async (req, res) => {
-  try {
-    const blog = await Blog.findById(req.params.id);
+exports.updateBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
 
-    if (!blog) return res.status(404).json({ error: "Blog not found" });
-    if (blog.author.toString() !== req.user.id)
-      return res.status(403).json({ error: "Unauthorized" });
-
-    const updated = await Blog.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.json(updated);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (!blog) {
+    res.status(404);
+    throw new CustomError("Blog not found", 404);
   }
-};
+  if (blog.author.toString() !== req.user.id) {
+    res.status(403);
+    throw new CustomError("Unauthorized", 403);
+  }
+
+  const updated = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+  });
+  res.json(updated);
+});
 
 // Delete a blog
-exports.deleteBlog = async (req, res) => {
-  try {
-    const blog = await Blog.findById(req.params.id);
+exports.deleteBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
 
-    if (!blog) return res.status(404).json({ error: "Blog not found" });
-    if (blog.author.toString() !== req.user.id)
-      return res.status(403).json({ error: "Unauthorized" });
-
-    await Blog.findByIdAndDelete(req.params.id);
-    res.json({ message: "Blog deleted" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (!blog) {
+    res.status(404);
+    throw new CustomError("Blog not found", 404);
   }
-};
+  if (blog.author.toString() !== req.user.id) {
+    res.status(403);
+    throw new CustomError("Unauthorized", 403);
+  }
+
+  await Blog.findByIdAndDelete(req.params.id);
+  res.json({ message: "Blog deleted" });
+});
 
 // Rate a blog
-exports.rateBlog = async (req, res) => {
+exports.rateBlog = asyncHandler(async (req, res) => {
   const { stars } = req.body;
   const blogId = req.params.id;
 
-  try {
-    const existing = await Rating.findOne({
+  const existing = await Rating.findOne({
+    user: req.user.id,
+    blog: blogId,
+  });
+
+  if (existing) {
+    existing.stars = stars;
+    await existing.save();
+  } else {
+    await Rating.create({
       user: req.user.id,
       blog: blogId,
+      stars,
     });
-
-    if (existing) {
-      existing.stars = stars;
-      await existing.save();
-    } else {
-      await Rating.create({
-        user: req.user.id,
-        blog: blogId,
-        stars,
-      });
-    }
-
-    const updatedBlog = await Blog.findById(blogId).populate("ratings");
-    res.json(updatedBlog);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
   }
-};
+
+  const updatedBlog = await Blog.findById(blogId).populate("ratings");
+  res.json(updatedBlog);
+});
