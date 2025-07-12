@@ -91,8 +91,7 @@ exports.googleSignIn = asyncHandler(async (req, res) => {
 exports.updateUserProfile = asyncHandler(async (req, res) => {
   const { name, email, password, image } = req.body;
 
-  console.log(req);
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user.id);
 
   if (!user) {
     res.status(404);

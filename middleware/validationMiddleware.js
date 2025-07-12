@@ -54,7 +54,7 @@ const validateBlogUpdate = [
 
 const validateBlogRating = [
   param('id').isMongoId().withMessage('Invalid Blog ID'),
-  body('stars').isInt({ min: 1, max: 5 }).withMessage('Stars must be a number between 1 and 5'),
+  body('action').isIn(['like', 'unlike']).withMessage('Action must be "like" or "unlike"'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

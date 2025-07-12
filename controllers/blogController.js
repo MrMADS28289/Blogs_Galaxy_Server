@@ -28,7 +28,8 @@ exports.getAllBlogs = asyncHandler(async (req, res) => {
 
   const blogs = await Blog.find(query)
     .populate("author", "name avatar")
-    .populate("ratings"); // Keep ratings for now, as per previous instruction
+    .populate("ratings")
+    .populate("likedBy"); // Populate likedBy field
   res.status(200).json(blogs);
 });
 
@@ -36,7 +37,9 @@ exports.getAllBlogs = asyncHandler(async (req, res) => {
 exports.getBlogById = asyncHandler(async (req, res) => {
   const blog = await Blog.findById(req.params.id)
     .populate("author", "name avatar")
-    .populate("ratings");
+    .populate("ratings")
+    .select("+likes")
+    .populate("likedBy"); // Populate likedBy field
 
   if (!blog) {
     res.status(404);
@@ -87,25 +90,35 @@ exports.deleteBlog = asyncHandler(async (req, res) => {
 
 // Rate a blog
 exports.rateBlog = asyncHandler(async (req, res) => {
-  const { stars } = req.body;
+  const { action } = req.body;
   const blogId = req.params.id;
+  const userId = req.user.id;
 
-  const existing = await Rating.findOne({
-    user: req.user.id,
-    blog: blogId,
-  });
+  const blog = await Blog.findById(blogId);
 
-  if (existing) {
-    existing.stars = stars;
-    await existing.save();
-  } else {
-    await Rating.create({
-      user: req.user.id,
-      blog: blogId,
-      stars,
-    });
+  if (!blog) {
+    res.status(404);
+    throw new CustomError("Blog not found", 404);
   }
 
-  const updatedBlog = await Blog.findById(blogId).populate("ratings");
-  res.json(updatedBlog);
+  const userLikedIndex = blog.likedBy.findIndex((id) => id.toString() === userId);
+  const isLiked = userLikedIndex !== -1;
+
+  if (action === "like") {
+    if (!isLiked) {
+      blog.likes += 1;
+      blog.likedBy.push(userId);
+    }
+  } else if (action === "unlike") {
+    if (isLiked) {
+      blog.likes = Math.max(0, blog.likes - 1);
+      blog.likedBy.splice(userLikedIndex, 1);
+    }
+  } else {
+    res.status(400);
+    throw new CustomError("Invalid action", 400);
+  }
+
+  await blog.save();
+  res.json({ likes: blog.likes, isLiked: !isLiked });
 });
