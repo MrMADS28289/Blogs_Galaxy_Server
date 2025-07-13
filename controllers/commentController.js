@@ -16,9 +16,6 @@ exports.createComment = asyncHandler(async (req, res) => {
 
   const comment = await newComment.save();
 
-  // Optionally, you might want to update the Blog model to include comment count or last comment
-  // For now, we'll just save the comment.
-
   if (comment) {
     res.status(201).json(comment);
   } else {
@@ -29,7 +26,9 @@ exports.createComment = asyncHandler(async (req, res) => {
 
 // Get comments for a specific blog
 exports.getCommentsByBlog = asyncHandler(async (req, res) => {
-  const comments = await Comment.find({ blog: req.params.blogId }).populate("author", "username").sort({ createdAt: -1 });
+  const comments = await Comment.find({ blog: req.params.blogId })
+    .populate("author", "name email")
+    .sort({ createdAt: -1 });
   res.json(comments);
 });
 
@@ -48,7 +47,11 @@ exports.updateComment = asyncHandler(async (req, res) => {
     throw new CustomError("Not authorized to update this comment", 401);
   }
 
-  comment = await Comment.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+  comment = await Comment.findByIdAndUpdate(
+    req.params.id,
+    { $set: req.body },
+    { new: true }
+  );
   res.json(comment);
 });
 
