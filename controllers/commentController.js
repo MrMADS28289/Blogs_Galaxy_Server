@@ -17,6 +17,15 @@ exports.createComment = asyncHandler(async (req, res) => {
   const comment = await newComment.save();
 
   if (comment) {
+    // Update the comments array in the corresponding blog
+    const blog = await Blog.findById(blogId);
+    if (blog) {
+      blog.comments.push(comment._id);
+      await blog.save();
+    } else {
+      // If blog not found, it's an inconsistency, but comment is still saved
+      console.warn(`Blog with ID ${blogId} not found for comment ${comment._id}`);
+    }
     res.status(201).json(comment);
   } else {
     res.status(400);
@@ -76,9 +85,22 @@ exports.deleteComment = asyncHandler(async (req, res) => {
 
 // Get all comments (Admin only)
 exports.getAllComments = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
+
   const comments = await Comment.find({})
     .populate("author", "name email")
     .populate("blog", "title")
-    .sort({ createdAt: -1 });
-  res.json(comments);
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const totalComments = await Comment.countDocuments({});
+
+  res.json({
+    comments,
+    currentPage: parseInt(page),
+    totalPages: Math.ceil(totalComments / limit),
+    totalComments,
+  });
 });

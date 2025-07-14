@@ -10,7 +10,9 @@ exports.createBlog = asyncHandler(async (req, res) => {
     author: req.user.id,
   });
   if (blog) {
-    res.status(201).json(blog);
+    // Populate the author field before sending the response
+    const populatedBlog = await Blog.findById(blog._id).populate("author", "name avatar");
+    res.status(201).json(populatedBlog);
   } else {
     res.status(400);
     throw new CustomError("Invalid blog data", 400);
@@ -19,18 +21,31 @@ exports.createBlog = asyncHandler(async (req, res) => {
 
 // Get all blogs
 exports.getAllBlogs = asyncHandler(async (req, res) => {
-  const { category } = req.query; // Extract category from query parameters
+  const { category, page = 1, limit = 10 } = req.query; // Extract category, page, and limit from query parameters
   let query = {};
 
   if (category) {
     query.category = category; // Add category to query if provided
   }
 
+  const skip = (page - 1) * limit;
+
   const blogs = await Blog.find(query)
     .populate("author", "name avatar")
     .populate("ratings")
-    .populate("likedBy"); // Populate likedBy field
-  res.status(200).json(blogs);
+    .populate("likedBy") // Populate likedBy field
+    .sort({ createdAt: -1 }) // Sort by newest first
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const totalBlogs = await Blog.countDocuments(query);
+
+  res.status(200).json({
+    blogs,
+    currentPage: parseInt(page),
+    totalPages: Math.ceil(totalBlogs / limit),
+    totalBlogs,
+  });
 });
 
 // Get single blog
