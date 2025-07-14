@@ -4,8 +4,8 @@ const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const CustomError = require("../utils/CustomError");
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 };
@@ -28,7 +28,8 @@ exports.register = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      role: user.role,
+      token: generateToken(user._id, user.role),
     });
   } else {
     res.status(400);
@@ -46,7 +47,8 @@ exports.login = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      role: user.role,
+      token: generateToken(user._id, user.role),
     });
   } else {
     res.status(401);
@@ -66,7 +68,8 @@ exports.googleSignIn = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       image: user.image,
-      token: generateToken(user._id),
+      role: user.role,
+      token: generateToken(user._id, user.role),
     });
   } else {
     // User does not exist, create a new one
@@ -83,9 +86,54 @@ exports.googleSignIn = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       image: user.image,
-      token: generateToken(user._id),
+      role: user.role,
+      token: generateToken(user._id, user.role),
     });
   }
+});
+
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({});
+  res.json(users);
+});
+
+exports.updateUserRole = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    res.status(404);
+    throw new CustomError("User not found", 404);
+  }
+
+  user.role = role || user.role;
+
+  const updatedUser = await user.save();
+
+  res.json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    image: updatedUser.image,
+    role: updatedUser.role,
+  });
+});
+
+exports.deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    res.status(404);
+    throw new CustomError("User not found", 404);
+  }
+
+  await user.deleteOne();
+
+  res.json({ message: "User removed" });
 });
 
 exports.updateUserProfile = asyncHandler(async (req, res) => {
@@ -113,6 +161,7 @@ exports.updateUserProfile = asyncHandler(async (req, res) => {
     name: updatedUser.name,
     email: updatedUser.email,
     image: updatedUser.image,
-    token: generateToken(updatedUser._id),
+    role: updatedUser.role,
+    token: generateToken(updatedUser._id, updatedUser.role),
   });
 });

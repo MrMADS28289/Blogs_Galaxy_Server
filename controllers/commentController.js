@@ -65,11 +65,20 @@ exports.deleteComment = asyncHandler(async (req, res) => {
   }
 
   // Ensure user is the author of the comment or an admin
-  if (comment.author.toString() !== req.user.id) {
+  if (comment.author.toString() !== req.user.id && req.user.role !== 'admin') {
     res.status(401);
     throw new CustomError("Not authorized to delete this comment", 401);
   }
 
   await Comment.findByIdAndDelete(req.params.id);
   res.json({ message: "Comment removed" });
+});
+
+// Get all comments (Admin only)
+exports.getAllComments = asyncHandler(async (req, res) => {
+  const comments = await Comment.find({})
+    .populate("author", "name email")
+    .populate("blog", "title")
+    .sort({ createdAt: -1 });
+  res.json(comments);
 });

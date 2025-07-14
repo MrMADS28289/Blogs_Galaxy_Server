@@ -7,6 +7,8 @@ This is the backend API for the Blogs Galaxy platform, providing robust function
 *   **User Authentication:** Secure user registration and login using JWT.
 *   **Blog Management:** Create, read, update, and delete blog posts.
 *   **Comment System:** Add and retrieve comments on blog posts.
+*   **Admin User Management:** Administrators can view, update roles, and delete users.
+*   **Admin Comment Management:** Administrators can delete any comment and view all comments.
 *   **Database Integration:** Seamless data persistence with MongoDB.
 *   **Error Handling:** Centralized error handling and validation.
 
@@ -49,11 +51,29 @@ To set up the project locally, follow these steps:
 
 ## Usage
 
-1.  **Start the development server:**
-    ```bash
-    npm start
-    ```
-    The server will start on `http://localhost:5000`.
+To run the server:
+
+```bash
+npm start
+```
+
+The server will start on `http://localhost:5000`.
+
+## Development
+
+For development, you can use `nodemon` to automatically restart the server on file changes. First, ensure `nodemon` is installed globally or as a development dependency:
+
+```bash
+npm install -g nodemon # or npm install --save-dev nodemon
+```
+
+Then, start the development server:
+
+```bash
+nodemon server.js
+```
+
+The server will be accessible at `http://localhost:5000`.
 
 ## API Endpoints
 

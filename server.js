@@ -12,6 +12,7 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/blogs", require("./routes/blogRoutes"));
 app.use("/api/comments", require("./routes/commentRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
 
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
