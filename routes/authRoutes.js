@@ -1,9 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { register, login, googleSignIn, updateUserProfile, getAllUsers, updateUserRole, deleteUser } = require("../controllers/authController");
+const {
+  register,
+  login,
+  googleSignIn,
+  updateUserProfile,
+  getAllUsers,
+  updateUserRole,
+  deleteUser,
+} = require("../controllers/authController");
 const protect = require("../middleware/authMiddleware");
 const admin = require("../middleware/adminMiddleware");
-const { validateRegistration, validateLogin } = require("../middleware/validationMiddleware");
+const {
+  validateRegistration,
+  validateLogin,
+} = require("../middleware/validationMiddleware");
 
 router.post("/register", ...validateRegistration, register);
 router.post("/login", ...validateLogin, login);

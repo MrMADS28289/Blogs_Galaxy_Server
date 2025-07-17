@@ -11,7 +11,10 @@ exports.createBlog = asyncHandler(async (req, res) => {
   });
   if (blog) {
     // Populate the author field before sending the response
-    const populatedBlog = await Blog.findById(blog._id).populate("author", "name avatar");
+    const populatedBlog = await Blog.findById(blog._id).populate(
+      "author",
+      "name avatar"
+    );
     res.status(201).json(populatedBlog);
   } else {
     res.status(400);
@@ -116,7 +119,9 @@ exports.rateBlog = asyncHandler(async (req, res) => {
     throw new CustomError("Blog not found", 404);
   }
 
-  const userLikedIndex = blog.likedBy.findIndex((id) => id.toString() === userId);
+  const userLikedIndex = blog.likedBy.findIndex(
+    (id) => id.toString() === userId
+  );
   const isLiked = userLikedIndex !== -1;
 
   if (action === "like") {

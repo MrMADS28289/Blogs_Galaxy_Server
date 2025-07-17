@@ -6,7 +6,7 @@ const CustomError = require("../utils/CustomError");
 // Create a new comment
 exports.createComment = asyncHandler(async (req, res) => {
   const { text, blogId } = req.body;
-  const author = req.user.id; // Assuming user ID is available from authentication middleware
+  const author = req.user.id;
 
   const newComment = new Comment({
     text,
@@ -24,7 +24,9 @@ exports.createComment = asyncHandler(async (req, res) => {
       await blog.save();
     } else {
       // If blog not found, it's an inconsistency, but comment is still saved
-      console.warn(`Blog with ID ${blogId} not found for comment ${comment._id}`);
+      console.warn(
+        `Blog with ID ${blogId} not found for comment ${comment._id}`
+      );
     }
     res.status(201).json(comment);
   } else {
@@ -74,7 +76,7 @@ exports.deleteComment = asyncHandler(async (req, res) => {
   }
 
   // Ensure user is the author of the comment or an admin
-  if (comment.author.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (comment.author.toString() !== req.user.id && req.user.role !== "admin") {
     res.status(401);
     throw new CustomError("Not authorized to delete this comment", 401);
   }
