@@ -1,5 +1,13 @@
 # Blogs Galaxy Backend
 
+![Node.js](https://img.shields.io/badge/Node.js-20.x-green)
+![Express](https://img.shields.io/badge/Express.js-Backend-black)
+![MongoDB](https://img.shields.io/badge/MongoDB-Database-brightgreen)
+![Mongoose](https://img.shields.io/badge/Mongoose-ODM-red)
+![Deployed on Render](https://img.shields.io/badge/Deployed-Render-blueviolet)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow)
+![Status](https://img.shields.io/badge/Status-Live-brightgreen)
+
 ## Project Description
 
 Blogs Galaxy is a robust backend application designed to power a dynamic blogging platform. It provides a comprehensive set of RESTful APIs for managing users, blog posts, comments, ratings, and administrative functionalities. Built with Node.js and Express, it emphasizes clean architecture, secure authentication, and efficient data handling.
