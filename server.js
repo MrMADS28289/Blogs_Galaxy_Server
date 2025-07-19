@@ -14,6 +14,11 @@ app.use("/api/blogs", require("./routes/blogRoutes"));
 app.use("/api/comments", require("./routes/commentRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 
+// Health check route
+app.get("/api/health", (req, res) => {
+  res.send("Server is healthy");
+});
+
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 app.use(notFound);
