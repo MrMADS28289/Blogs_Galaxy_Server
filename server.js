@@ -13,6 +13,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/blogs", require("./routes/blogRoutes"));
 app.use("/api/comments", require("./routes/commentRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/gemini", require("./routes/geminiRoutes"));
 
 // Health check route
 app.get("/api/health", (req, res) => {

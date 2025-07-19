@@ -97,6 +97,10 @@ Below is a summary of the main API endpoints. Detailed documentation can be foun
 - `GET /api/admin/dashboard`: Admin dashboard data (admin only).
 - `PUT /api/admin/users/:id/role`: Update user role (admin only).
 
+### Gemini
+
+- `POST /api/gemini/chat`: Interact with the Gemini API for chat-based functionalities.
+
 ## Technologies Used
 
 - Node.js
@@ -105,6 +109,7 @@ Below is a summary of the main API endpoints. Detailed documentation can be foun
 - JSON Web Token (JWT) for authentication
 - bcrypt.js for password hashing
 - Joi (or similar) for validation (if implemented)
+- Google Gemini API
 
 ## Authentication & Authorization
 
